@@ -33,7 +33,7 @@ Esta aplicación permite al personal sanitario monitorizar de forma remota los s
 
 1. Clonar el repositorio:
    ```
-   git clone https://github.com/tu-usuario/sistema-monitorizacion.git
+   git clone https://github.com/juapasfer2/TFG.git
    ```
 
 2. Instalar dependencias:
@@ -61,10 +61,3 @@ lib/
 
 La versión actual es una demostración con datos simulados. Para acceder, usa el botón "Entrar en modo demostración" en la pantalla de login.
 
-## Licencia
-
-[Incluir información de licencia]
-
-## Contacto
-
-[Incluir información de contacto]
