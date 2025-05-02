@@ -13,6 +13,7 @@ import 'services/auth_service.dart';
 import 'screens/user_profile_screen.dart';
 
 void main() {
+  // No inicializar Firebase aquí para evitar problemas de compilación
   runApp(
     ChangeNotifierProvider(
       create: (context) => AppState(),
