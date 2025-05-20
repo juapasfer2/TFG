@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:http/http.dart' as http;
 
 // Importar pantallas
 import 'screens/login_screen.dart';
@@ -9,6 +10,7 @@ import 'screens/patients_screen.dart';
 import 'screens/alerts_screen.dart';
 import 'screens/thresholds_screen.dart';
 import 'screens/simulate_screen.dart';
+import 'screens/admin_users_screen.dart';
 import 'services/auth_service.dart';
 import 'screens/user_profile_screen.dart';
 
@@ -62,6 +64,7 @@ class SistemaMonitorizacion extends StatelessWidget {
         '/thresholds': (context) => ThresholdsScreen(),
         '/simulate': (context) => SimulateScreen(),
         '/profile': (context) => UserProfileScreen(),
+        '/admin/users': (context) => AdminUsersScreen(),
       },
       // Manejo de rutas dinámicas (con parámetros)
       onGenerateRoute: (settings) {

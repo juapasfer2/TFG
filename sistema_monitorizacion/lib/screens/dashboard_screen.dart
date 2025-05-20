@@ -12,6 +12,7 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   final PatientService _patientService = PatientService();
   final AlertService _alertService = AlertService();
+  final AuthService _authService = AuthService();
   
   List<Patient> _patients = [];
   List<Alert> _unacknowledgedAlerts = [];
@@ -143,6 +144,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 Navigator.pushNamed(context, '/thresholds');
               },
             ),
+            if (_authService.isAdmin)
+              ListTile(
+                leading: const Icon(Icons.admin_panel_settings),
+                title: const Text('Administrar Usuarios'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.pushNamed(context, '/admin/users');
+                },
+              ),
             const Divider(),
             ListTile(
               leading: const Icon(Icons.exit_to_app),

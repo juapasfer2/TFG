@@ -14,6 +14,33 @@ class _LoginScreenState extends State<LoginScreen> {
   String _errorMessage = '';
 
   @override
+  void initState() {
+    super.initState();
+    // Verificar si hay una sesión activa
+    _checkSession();
+  }
+
+  Future<void> _checkSession() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final user = await _authService.checkSession();
+      if (user != null) {
+        // Si hay sesión activa, navegar al dashboard
+        Navigator.pushReplacementNamed(context, '/dashboard');
+      }
+    } catch (e) {
+      print('Error al verificar sesión: $e');
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
@@ -132,12 +159,13 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 16),
               
               // Modo demo (para desarrollo)
-              TextButton(
-                onPressed: () {
-                  Navigator.pushReplacementNamed(context, '/dashboard');
-                },
-                child: const Text('Entrar en modo demostración'),
-              ),
+              if (false) // Quitar en producción
+                TextButton(
+                  onPressed: () {
+                    Navigator.pushReplacementNamed(context, '/dashboard');
+                  },
+                  child: const Text('Entrar en modo demostración'),
+                ),
             ],
           ),
         ),

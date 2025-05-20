@@ -1,14 +1,18 @@
+import 'role.dart';
+
 class User {
-  final int id;
+  final int? id;
   final String name;
   final String email;
-  final int roleId;
+  final String? password;
+  final Role? role;
 
   User({
-    required this.id,
+    this.id,
     required this.name,
     required this.email,
-    required this.roleId,
+    this.password,
+    this.role,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -16,16 +20,20 @@ class User {
       id: json['id'],
       name: json['name'],
       email: json['email'],
-      roleId: json['role_id'],
+      role: json['role'] != null ? Role.fromJson(json['role']) : null,
     );
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'id': id,
+    final Map<String, dynamic> data = {
       'name': name,
       'email': email,
-      'role_id': roleId,
     };
+    
+    if (id != null) data['id'] = id;
+    if (password != null) data['password'] = password;
+    if (role != null) data['role_id'] = role!.id;
+    
+    return data;
   }
 } 
