@@ -29,14 +29,15 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     });
 
     try {
-      // En modo demo, cargamos datos de prueba
-      final patients = _patientService.getMockPatients();
-      final alerts = _alertService.getMockAlerts();
+      // Cargar datos desde la API
+      final patients = await _patientService.getAllPatients();
+      final alerts = await _alertService.getAllAlerts();
+      // Puedes obtener usuarios desde UserService si lo necesitas
       
       setState(() {
         _totalPatients = patients.length;
         _totalAlerts = alerts.length;
-        _totalUsers = 5; // Número ficticio para demo
+        _totalUsers = 5; // Actualizar esto cuando implementes la carga de usuarios
       });
     } catch (e) {
       print('Error al cargar datos: $e');

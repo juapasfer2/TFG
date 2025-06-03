@@ -48,10 +48,10 @@ class _SimulateScreenState extends State<SimulateScreen> {
 
     try {
       // Cargar pacientes
-      _patients = _patientService.getMockPatients();
+      _patients = await _patientService.getAllPatients();
       
       // Cargar tipos de signos vitales
-      _vitalTypes = _vitalService.getMockVitalTypes();
+      _vitalTypes = await _vitalService.getAllVitalTypes();
       
       // Establecer selecciones por defecto
       if (_patients.isNotEmpty) {
@@ -162,8 +162,7 @@ class _SimulateScreenState extends State<SimulateScreen> {
     
     try {
       // Crear la lectura
-      final reading = VitalReading(
-        id: 100 + _random.nextInt(1000), // ID simulado
+      final readingRequest = VitalReadingRequest(
         patientId: _selectedPatientId,
         typeId: _selectedVitalTypeId,
         value: value,
@@ -171,9 +170,9 @@ class _SimulateScreenState extends State<SimulateScreen> {
       );
       
       // Enviar la lectura
-      final success = await _vitalService.addReading(reading);
+      final reading = await _vitalService.addReading(readingRequest);
       
-      if (success) {
+      if (reading != null) {
         _showResultMessage('Lectura enviada correctamente.', true);
         // Generar un nuevo valor aleatorio
         _generateRandomValueForType();

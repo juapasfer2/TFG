@@ -36,7 +36,9 @@ class AuthService {
         final authResponse = AuthResponse.fromJson(jsonDecode(response.body));
         _token = authResponse.token;
         
+        // Crear el usuario con la información de la respuesta
         _currentUser = User(
+          id: authResponse.id,  // Asegúrate de que AuthResponse incluya el id
           name: authResponse.name,
           email: authResponse.email,
           role: Role(id: 0, name: authResponse.role),

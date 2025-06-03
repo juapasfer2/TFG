@@ -3,6 +3,9 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import '../models/models.dart';
 import '../services/services.dart';
+import '../models/patient.dart';
+import '../models/vital_reading.dart';
+import '../models/vital_type.dart';
 
 class PatientDetailsScreen extends StatefulWidget {
   final int patientId;
@@ -16,6 +19,7 @@ class PatientDetailsScreen extends StatefulWidget {
 class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
   final PatientService _patientService = PatientService();
   final VitalService _vitalService = VitalService();
+  final AuthService _authService = AuthService();
   
   Patient? _patient;
   List<VitalReading> _readings = [];
@@ -36,14 +40,23 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
 
     try {
       // Obtener datos del paciente
-      _patient = _patientService.getMockPatients()
-          .firstWhere((p) => p.id == widget.patientId);
+      final currentUser = _authService.currentUser;
+      if (currentUser?.role?.name == 'NURSE') {
+        _patient = await _patientService.getMyPatientById(widget.patientId.toString());
+      } else {
+        _patient = await _patientService.getPatientById(widget.patientId.toString());
+      }
+      
+      if (_patient == null) {
+        print('Paciente no encontrado');
+        return;
+      }
       
       // Obtener tipos de signos vitales
-      _vitalTypes = _vitalService.getMockVitalTypes();
+      _vitalTypes = await _vitalService.getAllVitalTypes();
       
       // Obtener lecturas
-      _readings = _vitalService.getMockReadings(widget.patientId);
+      _readings = await _vitalService.getPatientReadings(widget.patientId);
       
       // Establecer el signo vital seleccionado por defecto (si hay tipos disponibles)
       if (_vitalTypes.isNotEmpty) {

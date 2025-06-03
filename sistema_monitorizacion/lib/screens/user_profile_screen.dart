@@ -147,7 +147,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 ),
           const SizedBox(height: 8),
           Text(
-            _currentUser!.roleId == 1 ? 'Administrador' : 'Enfermera',
+            _currentUser!.role?.id == 1 ? 'Administrador' : 'Enfermera',
             style: TextStyle(
               fontSize: 16,
               color: Colors.grey[600],
@@ -192,7 +192,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
             _buildInfoItem(
               icon: Icons.work,
               title: 'Rol',
-              value: _currentUser!.roleId == 1 ? 'Administrador' : 'Enfermera',
+              value: _currentUser!.role?.id == 1 ? 'Administrador' : 'Enfermera',
               isEditable: false,
             ),
           ],

@@ -30,9 +30,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
 
     try {
-      // En modo demo, usando datos ficticios
-      _patients = _patientService.getMockPatients();
-      _unacknowledgedAlerts = _alertService.getMockAlerts()
+      // Cargar datos según el rol del usuario (automáticamente detectado en getMyPatients)
+      _patients = await _patientService.getMyPatients();
+      
+      // Cargar alertas (automáticamente usa el endpoint correcto según el rol)
+      final allAlerts = await _alertService.getAllAlerts();
+      _unacknowledgedAlerts = allAlerts
           .where((alert) => !alert.acknowledged)
           .toList();
     } catch (e) {
@@ -70,14 +73,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            const DrawerHeader(
-              decoration: BoxDecoration(
+            DrawerHeader(
+              decoration: const BoxDecoration(
                 color: Colors.deepOrange,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CircleAvatar(
+                  const CircleAvatar(
                     radius: 30,
                     backgroundColor: Colors.white,
                     child: Icon(
@@ -86,19 +89,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       color: Colors.deepOrange,
                     ),
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   Text(
-                    'Nombre del Usuario',
-                    style: TextStyle(
+                    _authService.currentUser?.name ?? 'Usuario',
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 18,
                     ),
                   ),
                   Text(
-                    'email@ejemplo.com',
-                    style: TextStyle(
+                    _authService.currentUser?.email ?? 'email@ejemplo.com',
+                    style: const TextStyle(
                       color: Colors.white70,
                       fontSize: 14,
+                    ),
+                  ),
+                  Text(
+                    _authService.currentUser?.role?.name ?? 'Rol',
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ],

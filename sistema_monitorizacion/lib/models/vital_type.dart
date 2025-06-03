@@ -18,8 +18,8 @@ class VitalType {
       id: json['id'],
       name: json['name'],
       unit: json['unit'],
-      normalMin: json['normal_min'].toDouble(),
-      normalMax: json['normal_max'].toDouble(),
+      normalMin: json['normalMin'].toDouble(),
+      normalMax: json['normalMax'].toDouble(),
     );
   }
 
@@ -28,8 +28,31 @@ class VitalType {
       'id': id,
       'name': name,
       'unit': unit,
-      'normal_min': normalMin,
-      'normal_max': normalMax,
+      'normalMin': normalMin,
+      'normalMax': normalMax,
+    };
+  }
+}
+
+class VitalTypeRequest {
+  final String name;
+  final String unit;
+  final double normalMin;
+  final double normalMax;
+
+  VitalTypeRequest({
+    required this.name,
+    required this.unit,
+    required this.normalMin,
+    required this.normalMax,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'unit': unit,
+      'normalMin': normalMin,
+      'normalMax': normalMax,
     };
   }
 } 

@@ -1,111 +1,117 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import '../models/models.dart';
+import '../utils/constants.dart';
+import 'auth_service.dart';
 
 class AlertService {
-  final List<Alert> _mockAlerts = [];
+  final AuthService _authService = AuthService();
   
   // Singleton pattern
   static final AlertService _instance = AlertService._internal();
   factory AlertService() => _instance;
-  AlertService._internal() {
-    _initMockAlerts();
-  }
-
-  // Inicializar alertas simuladas
-  void _initMockAlerts() {
-    final now = DateTime.now();
-    
-    // Crear algunas alertas de ejemplo
-    _mockAlerts.addAll([
-      Alert(
-        id: 1,
-        readingId: 101,
-        level: 'high',
-        timestamp: now.subtract(Duration(minutes: 30)),
-        acknowledged: false,
-        acknowledgedBy: null,
-      ),
-      Alert(
-        id: 2,
-        readingId: 203,
-        level: 'low',
-        timestamp: now.subtract(Duration(hours: 2)),
-        acknowledged: true,
-        acknowledgedBy: 1,
-      ),
-      Alert(
-        id: 3,
-        readingId: 305,
-        level: 'high',
-        timestamp: now.subtract(Duration(hours: 5)),
-        acknowledged: true,
-        acknowledgedBy: 2,
-      ),
-      Alert(
-        id: 4,
-        readingId: 402,
-        level: 'high',
-        timestamp: now.subtract(Duration(hours: 1)),
-        acknowledged: false,
-        acknowledgedBy: null,
-      ),
-      Alert(
-        id: 5,
-        readingId: 504,
-        level: 'low',
-        timestamp: now.subtract(Duration(hours: 3)),
-        acknowledged: false,
-        acknowledgedBy: null,
-      ),
-    ]);
-  }
+  AlertService._internal();
 
   // Obtener todas las alertas
   Future<List<Alert>> getAllAlerts() async {
-    // Simular una llamada a API
-    await Future.delayed(const Duration(milliseconds: 800));
-    return _mockAlerts;
+    try {
+      final currentUser = _authService.currentUser;
+      String endpoint = '/api/admin/alerts';
+      
+      // Si es enfermera, usar endpoint específico
+      if (currentUser?.role?.name == 'NURSE') {
+        endpoint = '/api/nurse/my-alerts';
+      }
+      
+      final url = Uri.parse('${Constants.apiBaseUrl}$endpoint');
+      final response = await http.get(
+        url,
+        headers: _authService.getAuthHeaders(),
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> alertsJson = jsonDecode(utf8.decode(response.bodyBytes));
+        return alertsJson.map((json) => Alert.fromJson(json)).toList();
+      } else {
+        print('Error al obtener alertas: ${response.statusCode}');
+        print('Respuesta: ${response.body}');
+        return [];
+      }
+    } catch (e) {
+      print('Error al obtener alertas: $e');
+      return [];
+    }
   }
 
   // Obtener alertas no reconocidas
   Future<List<Alert>> getUnacknowledgedAlerts() async {
-    // Simular una llamada a API
-    await Future.delayed(const Duration(milliseconds: 500));
-    return _mockAlerts.where((alert) => !alert.acknowledged).toList();
+    try {
+      final currentUser = _authService.currentUser;
+      String endpoint = '/api/admin/alerts/unacknowledged';
+      
+      // Si es enfermera, usar endpoint específico
+      if (currentUser?.role?.name == 'NURSE') {
+        endpoint = '/api/nurse/my-alerts/unacknowledged';
+      }
+      
+      final url = Uri.parse('${Constants.apiBaseUrl}$endpoint');
+      final response = await http.get(
+        url,
+        headers: _authService.getAuthHeaders(),
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> alertsJson = jsonDecode(utf8.decode(response.bodyBytes));
+        return alertsJson.map((json) => Alert.fromJson(json)).toList();
+      } else {
+        print('Error al obtener alertas no reconocidas: ${response.statusCode}');
+        print('Respuesta: ${response.body}');
+        return [];
+      }
+    } catch (e) {
+      print('Error al obtener alertas no reconocidas: $e');
+      return [];
+    }
   }
 
   // Reconocer una alerta
   Future<bool> acknowledgeAlert(String alertId, int userId) async {
-    // Simular una llamada a API
-    await Future.delayed(const Duration(seconds: 1));
-    
     try {
       final idInt = int.parse(alertId);
-      final alertIndex = _mockAlerts.indexWhere((a) => a.id == idInt);
-      
-      if (alertIndex != -1) {
-        // Crear una nueva alerta reconocida (inmutabilidad)
-        final newAlert = Alert(
-          id: _mockAlerts[alertIndex].id,
-          readingId: _mockAlerts[alertIndex].readingId,
-          level: _mockAlerts[alertIndex].level,
-          timestamp: _mockAlerts[alertIndex].timestamp,
-          acknowledged: true,
-          acknowledgedBy: userId,
-        );
-        
-        // Reemplazar la alerta en la lista
-        _mockAlerts[alertIndex] = newAlert;
-        return true;
-      }
-      return false;
+      final url = Uri.parse('${Constants.apiBaseUrl}/api/admin/alerts/$idInt/acknowledge');
+      final response = await http.post(
+        url,
+        headers: _authService.getAuthHeaders(),
+        body: jsonEncode({'userId': userId}),
+      );
+
+      return response.statusCode == 200;
     } catch (e) {
       print('Error al reconocer alerta: $e');
       return false;
     }
   }
+  
+  // Obtener alertas por paciente
+  Future<List<Alert>> getAlertsByPatient(int patientId) async {
+    try {
+      final url = Uri.parse('${Constants.apiBaseUrl}/api/admin/alerts/patient/$patientId');
+      final response = await http.get(
+        url,
+        headers: _authService.getAuthHeaders(),
+      );
 
-  // Para demostración: obtener datos ficticios de alertas
-  List<Alert> getMockAlerts() {
-    return List.from(_mockAlerts);
+      if (response.statusCode == 200) {
+        final List<dynamic> alertsJson = jsonDecode(response.body);
+        return alertsJson.map((json) => Alert.fromJson(json)).toList();
+      } else {
+        print('Error al obtener alertas del paciente: ${response.statusCode}');
+        print('Respuesta: ${response.body}');
+        return [];
+      }
+    } catch (e) {
+      print('Error al obtener alertas del paciente: $e');
+      return [];
+    }
   }
 } 

@@ -43,7 +43,7 @@ class _AlertsScreenState extends State<AlertsScreen> with SingleTickerProviderSt
 
     try {
       // Cargar todas las alertas
-      final allAlerts = _alertService.getMockAlerts();
+      final allAlerts = await _alertService.getAllAlerts();
       
       // Separar alertas pendientes y reconocidas
       _pendingAlerts = allAlerts.where((alert) => !alert.acknowledged).toList();
@@ -61,27 +61,31 @@ class _AlertsScreenState extends State<AlertsScreen> with SingleTickerProviderSt
   }
 
   Future<void> _loadRelatedData(List<Alert> alerts) async {
-    // En una aplicación real, esto sería optimizado para hacer menos consultas a la base de datos
-    
     // Obtener pacientes
-    final patients = _patientService.getMockPatients();
+    final patients = await _patientService.getAllPatients();
     _patientsMap = {for (var patient in patients) patient.id: patient};
     
     // Obtener tipos de signos vitales
-    final vitalTypes = _vitalService.getMockVitalTypes();
+    final vitalTypes = await _vitalService.getAllVitalTypes();
     _vitalTypesMap = {for (var type in vitalTypes) type.id: type};
     
-    // Simular obtención de lecturas relacionadas con las alertas
+    // Obtener lecturas relacionadas con las alertas
     for (var alert in alerts) {
-      // En un caso real, obtendríamos las lecturas por IDs
-      final reading = VitalReading(
+      try {
+        // Intentar obtener las lecturas por ID desde la API
+        final readings = await _vitalService.getAllVitalReadings();
+        final reading = readings.firstWhere((r) => r.id == alert.readingId, 
+                                           orElse: () => VitalReading(
         id: alert.readingId,
-        patientId: 1, // Simulamos que es del primer paciente
-        typeId: alert.readingId % 5 + 1, // Simulamos distintos tipos
-        value: 90 + (alert.id * 10), // Valor simulado
-        timestamp: alert.timestamp,
-      );
+                                             patientId: 1,
+                                             typeId: 1,
+                                             value: 0,
+                                             timestamp: alert.timestamp
+                                           ));
       _readingsMap[reading.id] = reading;
+      } catch (e) {
+        print('Error al obtener lectura: $e');
+      }
     }
   }
 

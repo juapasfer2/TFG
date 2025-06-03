@@ -79,7 +79,7 @@ class UserService {
   }
 
   // Actualizar un usuario existente (solo admin)
-  Future<UserResponse?> updateUser(int id, UserRequest userRequest) async {
+  Future<UserResponse?> updateUser(int id, UserUpdateRequest userRequest) async {
     try {
       final url = Uri.parse('${Constants.apiBaseUrl}/api/admin/users/$id');
       final response = await http.put(

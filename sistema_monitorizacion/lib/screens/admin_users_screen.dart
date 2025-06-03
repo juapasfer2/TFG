@@ -193,7 +193,8 @@ class _UserFormScreenState extends State<UserFormScreen> {
     if (widget.user != null) {
       _nameController.text = widget.user!.name;
       _emailController.text = widget.user!.email;
-      // No cargamos la contraseña por seguridad
+      // Buscar el rol del usuario después de cargar los roles
+      _loadUserRole();
     }
   }
   
@@ -226,6 +227,25 @@ class _UserFormScreenState extends State<UserFormScreen> {
     }
   }
   
+  Future<void> _loadUserRole() async {
+    if (widget.user?.roleName != null) {
+      // Esperar a que se carguen los roles
+      while (_roles.isEmpty && _isLoading) {
+        await Future.delayed(const Duration(milliseconds: 100));
+      }
+      
+      // Buscar el rol por nombre
+      final role = _roles.firstWhere(
+        (role) => role.name == widget.user!.roleName,
+        orElse: () => _roles.first,
+      );
+      
+      setState(() {
+        _selectedRoleId = role.id;
+      });
+    }
+  }
+  
   Future<void> _saveUser() async {
     if (!_formKey.currentState!.validate()) return;
     
@@ -241,22 +261,29 @@ class _UserFormScreenState extends State<UserFormScreen> {
     });
     
     try {
-      final userRequest = UserRequest(
-        name: _nameController.text,
-        email: _emailController.text,
-        password: _passwordController.text.isEmpty && !_isCreating 
-            ? 'no-change' // Valor especial para indicar que no se cambia
-            : _passwordController.text,
-        roleId: _selectedRoleId!,
-      );
-      
       if (_isCreating) {
+        // Para crear usuarios, la contraseña es obligatoria
+        final userRequest = UserRequest(
+          name: _nameController.text,
+          email: _emailController.text,
+          password: _passwordController.text,
+          roleId: _selectedRoleId!,
+        );
+        
         await _userService.createUser(userRequest);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Usuario creado con éxito')),
         );
       } else {
-        await _userService.updateUser(widget.user!.id, userRequest);
+        // Para actualizar usuarios, la contraseña es opcional
+        final userUpdateRequest = UserUpdateRequest(
+          name: _nameController.text,
+          email: _emailController.text,
+          password: _passwordController.text.isEmpty ? null : _passwordController.text,
+          roleId: _selectedRoleId!,
+        );
+        
+        await _userService.updateUser(widget.user!.id, userUpdateRequest);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Usuario actualizado con éxito')),
         );

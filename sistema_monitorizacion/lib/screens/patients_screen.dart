@@ -35,7 +35,7 @@ class _PatientsScreenState extends State<PatientsScreen> {
 
     try {
       // En modo demo, usando datos ficticios
-      _patients = _patientService.getMockPatients();
+      _patients = await _patientService.getAllPatients();
     } catch (e) {
       print('Error al cargar pacientes: $e');
     } finally {

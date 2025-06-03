@@ -10,9 +10,10 @@ class ThresholdsScreen extends StatefulWidget {
 
 class _ThresholdsScreenState extends State<ThresholdsScreen> {
   final VitalService _vitalService = VitalService();
+  final ThresholdService _thresholdService = ThresholdService();
   
   List<app_models.VitalType> _vitalTypes = [];
-  Map<int, app_models.Threshold> _thresholds = {};
+  Map<int, app_models.ThresholdResponse> _thresholds = {};
   Map<int, TextEditingController> _minControllers = {};
   Map<int, TextEditingController> _maxControllers = {};
   
@@ -44,24 +45,36 @@ class _ThresholdsScreenState extends State<ThresholdsScreen> {
 
     try {
       // Cargar tipos de signos vitales
-      _vitalTypes = _vitalService.getMockVitalTypes();
+      _vitalTypes = await _vitalService.getAllVitalTypes();
       
-      // Inicializar umbrales con valores por defecto
+      // Cargar umbrales desde la API
+      final thresholds = await _thresholdService.getAllThresholds();
+      for (final threshold in thresholds) {
+        _thresholds[threshold.typeId] = threshold;
+      }
+      
+      // Inicializar umbrales con valores por defecto si no existen
       for (final type in _vitalTypes) {
-        // En una aplicación real, cargaríamos los umbrales desde la base de datos
-        _thresholds[type.id] = app_models.Threshold(
-          id: type.id,
-          typeId: type.id,
-          minValue: type.normalMin,
-          maxValue: type.normalMax,
-        );
+        if (!_thresholds.containsKey(type.id)) {
+          // Por defecto, usar los rangos normales del tipo
+          _thresholds[type.id] = app_models.ThresholdResponse(
+            id: 0,
+            typeId: type.id,
+            typeName: type.name,
+            minValue: type.normalMin,
+            maxValue: type.normalMax,
+            level: 'normal',
+            description: 'Rango normal para ${type.name}',
+          );
+        }
         
         // Crear controladores para cada umbral
+        final threshold = _thresholds[type.id]!;
         _minControllers[type.id] = TextEditingController(
-          text: type.normalMin.toString(),
+          text: threshold.minValue.toString(),
         );
         _maxControllers[type.id] = TextEditingController(
-          text: type.normalMax.toString(),
+          text: threshold.maxValue.toString(),
         );
       }
     } catch (e) {
@@ -122,16 +135,31 @@ class _ThresholdsScreenState extends State<ThresholdsScreen> {
         final minValue = double.parse(_minControllers[type.id]!.text);
         final maxValue = double.parse(_maxControllers[type.id]!.text);
         
-        _thresholds[type.id] = app_models.Threshold(
-          id: type.id,
+        final oldThreshold = _thresholds[type.id]!;
+        
+        // Crear solicitud para actualizar el umbral
+        final request = app_models.ThresholdRequest(
           typeId: type.id,
           minValue: minValue,
           maxValue: maxValue,
+          level: oldThreshold.level,
+          description: oldThreshold.description,
         );
+        
+        if (oldThreshold.id > 0) {
+          // Actualizar umbral existente
+          final updated = await _thresholdService.updateThreshold(oldThreshold.id, request);
+          if (updated != null) {
+            _thresholds[type.id] = updated;
+          }
+        } else {
+          // Crear nuevo umbral
+          final created = await _thresholdService.createThreshold(request);
+          if (created != null) {
+            _thresholds[type.id] = created;
+          }
+        }
       }
-      
-      // En una aplicación real, guardaríamos los cambios en la base de datos
-      await Future.delayed(const Duration(milliseconds: 500)); // Simular guardado
       
       setState(() {
         _hasChanges = false;

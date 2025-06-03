@@ -1,31 +1,69 @@
-class Threshold {
+class ThresholdResponse {
   final int id;
   final int typeId;
+  final String typeName;
   final double minValue;
   final double maxValue;
+  final String level;
+  final String description;
 
-  Threshold({
+  ThresholdResponse({
     required this.id,
     required this.typeId,
+    required this.typeName,
     required this.minValue,
     required this.maxValue,
+    required this.level,
+    required this.description,
   });
 
-  factory Threshold.fromJson(Map<String, dynamic> json) {
-    return Threshold(
+  factory ThresholdResponse.fromJson(Map<String, dynamic> json) {
+    return ThresholdResponse(
       id: json['id'],
-      typeId: json['type_id'],
-      minValue: json['min_value'].toDouble(),
-      maxValue: json['max_value'].toDouble(),
+      typeId: json['typeId'],
+      typeName: json['typeName'],
+      minValue: json['minValue'].toDouble(),
+      maxValue: json['maxValue'].toDouble(),
+      level: json['level'],
+      description: json['description'],
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'type_id': typeId,
-      'min_value': minValue,
-      'max_value': maxValue,
+      'typeId': typeId,
+      'typeName': typeName,
+      'minValue': minValue,
+      'maxValue': maxValue,
+      'level': level,
+      'description': description,
+    };
+  }
+}
+
+class ThresholdRequest {
+  final int typeId;
+  final double minValue;
+  final double maxValue;
+  final String level;
+  final String description;
+
+  ThresholdRequest({
+    required this.typeId,
+    required this.minValue,
+    required this.maxValue,
+    required this.level,
+    required this.description,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'typeId': typeId,
+      'minValue': minValue,
+      'maxValue': maxValue,
+      'level': level,
+      'description': description,
     };
   }
 } 
