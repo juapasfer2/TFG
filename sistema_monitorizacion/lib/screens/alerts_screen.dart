@@ -12,6 +12,7 @@ class _AlertsScreenState extends State<AlertsScreen> with SingleTickerProviderSt
   final AlertService _alertService = AlertService();
   final PatientService _patientService = PatientService();
   final VitalService _vitalService = VitalService();
+  final AuthService _authService = AuthService();
   
   late TabController _tabController;
   List<Alert> _pendingAlerts = [];
@@ -42,8 +43,16 @@ class _AlertsScreenState extends State<AlertsScreen> with SingleTickerProviderSt
     });
 
     try {
-      // Cargar todas las alertas
-      final allAlerts = await _alertService.getAllAlerts();
+      // Cargar todas las alertas usando el método apropiado según el rol
+      List<Alert> allAlerts;
+      
+      if (_alertService.isNurse) {
+        // Las enfermeras solo ven sus alertas
+        allAlerts = await _alertService.getMyAlerts();
+      } else {
+        // Admins y doctores ven todas las alertas
+        allAlerts = await _alertService.getAllAlerts();
+      }
       
       // Separar alertas pendientes y reconocidas
       _pendingAlerts = allAlerts.where((alert) => !alert.acknowledged).toList();
@@ -53,6 +62,11 @@ class _AlertsScreenState extends State<AlertsScreen> with SingleTickerProviderSt
       await _loadRelatedData(allAlerts);
     } catch (e) {
       print('Error al cargar alertas: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al cargar alertas: $e')),
+        );
+      }
     } finally {
       setState(() {
         _isLoading = false;
@@ -61,8 +75,13 @@ class _AlertsScreenState extends State<AlertsScreen> with SingleTickerProviderSt
   }
 
   Future<void> _loadRelatedData(List<Alert> alerts) async {
-    // Obtener pacientes
-    final patients = await _patientService.getAllPatients();
+    // Obtener pacientes según el rol
+    List<Patient> patients;
+    if (_alertService.isNurse) {
+      patients = await _patientService.getMyPatients();
+    } else {
+      patients = await _patientService.getAllPatients();
+    }
     _patientsMap = {for (var patient in patients) patient.id: patient};
     
     // Obtener tipos de signos vitales
@@ -76,13 +95,13 @@ class _AlertsScreenState extends State<AlertsScreen> with SingleTickerProviderSt
         final readings = await _vitalService.getAllVitalReadings();
         final reading = readings.firstWhere((r) => r.id == alert.readingId, 
                                            orElse: () => VitalReading(
-        id: alert.readingId,
+                                             id: alert.readingId,
                                              patientId: 1,
                                              typeId: 1,
                                              value: 0,
                                              timestamp: alert.timestamp
                                            ));
-      _readingsMap[reading.id] = reading;
+        _readingsMap[reading.id] = reading;
       } catch (e) {
         print('Error al obtener lectura: $e');
       }
@@ -91,9 +110,14 @@ class _AlertsScreenState extends State<AlertsScreen> with SingleTickerProviderSt
 
   Future<void> _acknowledgeAlert(Alert alert) async {
     try {
+      final currentUser = _authService.currentUser;
+      if (currentUser == null || currentUser.id == null) {
+        throw Exception('Usuario no autenticado o sin ID válido');
+      }
+
       final success = await _alertService.acknowledgeAlert(
-        alert.id.toString(), 
-        1, // ID del usuario logueado
+        alert.id, // Ahora es int directamente
+        currentUser.id!, // ID del usuario logueado (con null assertion ya que verificamos arriba)
       );
       
       if (success) {
@@ -106,7 +130,7 @@ class _AlertsScreenState extends State<AlertsScreen> with SingleTickerProviderSt
             level: alert.level,
             timestamp: alert.timestamp,
             acknowledged: true,
-            acknowledgedBy: 1, // ID del usuario logueado
+            acknowledgedBy: currentUser.id!,
           );
           _acknowledgedAlerts.add(acknowledgedAlert);
         });
@@ -116,6 +140,8 @@ class _AlertsScreenState extends State<AlertsScreen> with SingleTickerProviderSt
             const SnackBar(content: Text('Alerta reconocida correctamente')),
           );
         }
+      } else {
+        throw Exception('No se pudo reconocer la alerta');
       }
     } catch (e) {
       print('Error al reconocer alerta: $e');
@@ -131,12 +157,41 @@ class _AlertsScreenState extends State<AlertsScreen> with SingleTickerProviderSt
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Gestión de Alertas'),
+        title: Row(
+          children: [
+            const Text('Gestión de Alertas'),
+            if (_alertService.isNurse) ...[
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Text(
+                  'Mis Alertas',
+                  style: TextStyle(fontSize: 12, color: Colors.blue),
+                ),
+              ),
+            ],
+          ],
+        ),
         bottom: TabBar(
           controller: _tabController,
-          tabs: const [
-            Tab(text: 'Pendientes'),
-            Tab(text: 'Historial'),
+          tabs: [
+            Tab(
+              text: 'Pendientes',
+              icon: _pendingAlerts.isNotEmpty 
+                  ? Badge(
+                      label: Text('${_pendingAlerts.length}'),
+                      child: const Icon(Icons.warning),
+                    )
+                  : const Icon(Icons.warning_outlined),
+            ),
+            Tab(
+              text: 'Historial',
+              icon: Icon(Icons.history),
+            ),
           ],
         ),
       ),

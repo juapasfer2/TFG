@@ -1,3 +1,3 @@
 class Constants {
-  static const String apiBaseUrl = 'http://tfgapi.us-east-1.elasticbeanstalk.com'; // URL base de la API
+  static const String apiBaseUrl = 'https://54.243.201.134:8443/Api'; // URL base de la API
 } 
