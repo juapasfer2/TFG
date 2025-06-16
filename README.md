@@ -11,17 +11,16 @@ Esta aplicación permite al personal sanitario monitorizar de forma remota los s
 - **Autenticación**: Inicio de sesión para personal sanitario.
 - **Dashboard**: Vista general de pacientes y alertas pendientes.
 - **Gestión de Pacientes**: Listado y detalles de pacientes.
-- **Monitorización de Signos Vitales**: Visualización de lecturas recientes y tendencias.
-- **Sistema de Alertas**: Notificaciones cuando los valores están fuera de rango.
-- **Configuración de Umbrales**: Personalización de los valores considerados normales.
-- **Simulación de Datos**: Herramienta para simular lecturas de signos vitales.
+- **Monitorización de Signos Vitales**: Visualización de lecturas recientes y tendencias. "En desarrollo"
+- **Sistema de Alertas**: Notificaciones cuando los valores están fuera de rango. "En desarrollo"
+- **Configuración de Umbrales**: Personalización de los valores considerados normales. "En desarrollo"
+- **Simulación de Datos**: Herramienta para simular lecturas de signos vitales. "En desarrollo"
 
 ## Tecnologías Utilizadas
 
 - **Frontend**: Flutter
-- **Backend**: Firebase (Firestore, Authentication)
+- **Backend**: Spring
 - **Gráficos**: fl_chart
-- **Estado**: Provider
 
 ## Requisitos para Desarrollo
 
@@ -59,5 +58,5 @@ lib/
 
 ## Modo Demo
 
-La versión actual es una demostración con datos simulados. Para acceder, usa el botón "Entrar en modo demostración" en la pantalla de login.
+La versión actual se encuentra en desarrollo lo que quiere decir que hay cosas que no estan implementadas y no tienen funcionamiento.
 
